@@ -65,7 +65,7 @@ A secure, command-line password vault built with Java Spring Boot, featuring mil
 2. **Register a new account**
    ```
    =================================
-    ISHAN's SECURE PASSWORD VAULT CLI
+    SECURE PASSWORD VAULT CLI
    =================================
    
    1. Login
