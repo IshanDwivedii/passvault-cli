@@ -5,6 +5,7 @@ import com.ishan.passvault.service.UserService;
 import com.ishan.passvault.model.User;
 import com.ishan.passvault.service.PasswordService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,9 @@ import java.util.Scanner;
 
 @Component
 public class PasswordVaultCLI implements CommandLineRunner {
+
+    @Value("${passvault.mode:web}")
+    private String mode;
 
     @Autowired
     private AuthenticationService authService;
@@ -29,6 +33,14 @@ public class PasswordVaultCLI implements CommandLineRunner {
     private User currentUser = null;
 
     public void run(String... args) throws Exception {
+        if (!"cli".equalsIgnoreCase(mode)) {
+            System.out.println("=================================");
+            System.out.println(" PASSWORD VAULT WEB MODE");
+            System.out.println(" Access at: http://localhost:8080");
+            System.out.println("=================================");
+            return;
+        }
+
         System.out.println("=================================");
         System.out.println(" ISHAN's SECURE PASSWORD VAULT CLI");
         System.out.println("=================================");

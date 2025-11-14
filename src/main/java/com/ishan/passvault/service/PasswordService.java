@@ -27,9 +27,9 @@ public class PasswordService {
     @Autowired
     private EncryptionService encryptionService;
 
-    public PasswordEntry addPassword(User user, String serviceName, String username, String password, String notes, String category) throws Exception {
+    public PasswordEntry addPassword(User user, String serviceName, String username, String password, String notes, String category, String masterPassword) throws Exception {
         log.info("Adding password entry for user: {}, service: {}", user.getUsername(), serviceName);
-        
+
         // Validate input
         if (serviceName == null || serviceName.trim().isEmpty()) {
             throw new IllegalArgumentException("Service name cannot be null or empty");
@@ -40,18 +40,18 @@ public class PasswordService {
         if (password == null || password.trim().isEmpty()) {
             throw new IllegalArgumentException("Password cannot be null or empty");
         }
-        
+
         // Check if entry already exists
         Optional<PasswordEntry> existingEntry = passwordEntryRepository.findByUserAndServiceNameAndUsername(
                 user, serviceName.trim(), username.trim());
         if (existingEntry.isPresent()) {
-            log.warn("Password entry already exists for user: {}, service: {}, username: {}", 
+            log.warn("Password entry already exists for user: {}, service: {}, username: {}",
                     user.getUsername(), serviceName, username);
             throw new RuntimeException("Password entry already exists for this service and username");
         }
 
-        // Encrypt password
-        String encryptedPassword = encryptionService.encrypt(password, user.getMasterPasswordHash());
+        // Encrypt password using master password
+        String encryptedPassword = encryptionService.encrypt(password, masterPassword);
         
         // Create password entry
         PasswordEntry entry = PasswordEntry.builder()
@@ -70,26 +70,26 @@ public class PasswordService {
         return savedEntry;
     }
 
-    public String getPassword(User user, String serviceName, String username) throws Exception {
-        log.info("Retrieving password for user: {}, service: {}, username: {}", 
+    public String getPassword(User user, String serviceName, String username, String masterPassword) throws Exception {
+        log.info("Retrieving password for user: {}, service: {}, username: {}",
                 user.getUsername(), serviceName, username);
-        
+
         Optional<PasswordEntry> entryOpt = passwordEntryRepository.findByUserAndServiceNameAndUsername(
                 user, serviceName, username);
         if (entryOpt.isPresent()) {
             PasswordEntry entry = entryOpt.get();
-            
+
             // Update last accessed time
             entry.markAsAccessed();
             passwordEntryRepository.save(entry);
-            
-            // Decrypt and return password
-            String decryptedPassword = encryptionService.decrypt(entry.getEncryptedPassword(), user.getMasterPasswordHash());
+
+            // Decrypt and return password using master password
+            String decryptedPassword = encryptionService.decrypt(entry.getEncryptedPassword(), masterPassword);
             log.info("Password retrieved successfully for user: {}, service: {}", user.getUsername(), serviceName);
             return decryptedPassword;
         }
-        
-        log.warn("Password entry not found for user: {}, service: {}, username: {}", 
+
+        log.warn("Password entry not found for user: {}, service: {}, username: {}",
                 user.getUsername(), serviceName, username);
         return null;
     }
